@@ -12,6 +12,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
@@ -126,12 +127,19 @@ public class SocketIO {
 	
 	/**
 	 * Set the socket factory used for SSL connections.
-	 * @param socketFactory
+	 * @param sslContext
 	 */
 	public static void setDefaultSSLSocketFactory(SSLContext sslContext) {
 		IOConnection.setSslContext(sslContext);
 	}
-	
+    /**
+	 * Set the hostname verifier used for SSL connections.
+	 * @param hostnameVerifier
+	 */
+	public static void setDefaultHostnameVerifier(HostnameVerifier hostnameVerifier) {
+		IOConnection.setHostnameVerifier(hostnameVerifier);
+	}
+
 	/**
 	 * connects to supplied host using callback. Do only use this method if you
 	 * instantiate {@link SocketIO} using {@link #SocketIO()}.

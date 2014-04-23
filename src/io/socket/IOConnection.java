@@ -25,6 +25,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -68,6 +69,9 @@ class IOConnection implements IOCallback {
 
 	/** The SSL socket factory for HTTPS connections */
 	private static SSLContext sslContext = null;
+
+    /** The Hostname verifier for HTTPS connections */
+    private static HostnameVerifier hostnameVerifier = null;
 
 	/** All available connections. */
 	private static HashMap<String, List<IOConnection>> connections = new HashMap<String, List<IOConnection>>();
@@ -220,6 +224,14 @@ class IOConnection implements IOCallback {
 		return sslContext;
 	}
 
+    /**
+	 * Set the hostname verifier https connections.
+	 *
+	 * @param hostnameVerifier
+	 */
+	public static void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
+		IOConnection.hostnameVerifier = hostnameVerifier;
+	}
 	/**
 	 * Creates a new connection or returns the corresponding one.
 	 * 
@@ -300,6 +312,11 @@ class IOConnection implements IOCallback {
 			if (connection instanceof HttpsURLConnection) {
 				((HttpsURLConnection) connection)
 						.setSSLSocketFactory(sslContext.getSocketFactory());
+                if(hostnameVerifier != null){
+                    System.out.println("using custom hostname verifier");
+                    ((HttpsURLConnection) connection)
+                            .setHostnameVerifier(hostnameVerifier);
+                }
 			}
 			connection.setConnectTimeout(connectTimeout);
 			connection.setReadTimeout(connectTimeout);
