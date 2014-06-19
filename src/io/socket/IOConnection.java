@@ -10,9 +10,11 @@ package io.socket;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -106,6 +108,8 @@ class IOConnection implements IOCallback {
 	/** Custom Request headers used while handshaking */
 	private Properties headers;
 
+    /** Custom Request headers used while handshaking */
+    private Properties queryParams;
 	/**
 	 * The first socket to be connected. the socket.io server does not send a
 	 * connected response to this one.
@@ -297,6 +301,39 @@ class IOConnection implements IOCallback {
 		}
 	}
 
+    private URL addQueryString(URL url){
+        if(queryParams == null){
+            return url;
+        }
+
+        if(queryParams.isEmpty()){
+            return url;
+        }
+
+        Boolean first = true;
+
+        String queryString = "?";
+        for (Entry<Object, Object> entry : queryParams.entrySet()) {
+            if(!first){
+                queryString += "&";
+            }
+            try{
+                queryString += URLEncoder.encode((String) entry.getKey(), "UTF-8");
+                queryString += "=";
+                queryString += URLEncoder.encode((String) entry.getValue(), "UTF-8");
+                first = false;
+            }catch(UnsupportedEncodingException e){
+                throw new RuntimeException("Broken VM does not support UTF-8");
+            }
+        }
+        try {
+            url = new URL(url.toString() + queryString);
+        }catch(MalformedURLException e){
+           throw new RuntimeException("Bad query parameter added to query string");
+        }
+        return url;
+
+    }
 	/**
 	 * Handshake.
 	 * 
@@ -307,7 +344,8 @@ class IOConnection implements IOCallback {
 		URLConnection connection;
 		try {
 			setState(STATE_HANDSHAKE);
-			url = new URL(IOConnection.this.url.toString() + SOCKET_IO_1);
+			url = addQueryString(new URL(IOConnection.this.url.toString() + SOCKET_IO_1));
+
 			connection = url.openConnection();
 			if (connection instanceof HttpsURLConnection) {
 				((HttpsURLConnection) connection)
@@ -429,6 +467,7 @@ class IOConnection implements IOCallback {
 		}
 		firstSocket = socket;
 		headers = socket.getHeaders();
+        queryParams = socket.getQueryParams();
 		sockets.put(socket.getNamespace(), socket);
 		new ConnectThread().start();
 	}

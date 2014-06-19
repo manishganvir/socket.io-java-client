@@ -34,6 +34,7 @@ public class SocketIO {
 
 	/** Used for setting header during handshaking. */
 	private Properties headers = new Properties();
+    private Properties queryParams = new Properties();
 
 	private URL url;
 
@@ -48,9 +49,7 @@ public class SocketIO {
 
 	/**
 	 * Instantiates a new socket.io connection. The object connects after
-	 * calling {@link #connect(IOCallback)}
-	 * 
-	 * @param url
+	 * calling {@link #connect(IOCallback)} *  * @param url
 	 *            the url
 	 * @throws MalformedURLException
 	 *             the malformed url exception
@@ -373,6 +372,7 @@ public class SocketIO {
 		return headers;
 	}
 
+    public Properties getQueryParams() { return queryParams;}
 	/**
 	 * Sets the headers used while handshaking. Internally used. Use
 	 * {@link #SocketIO(String, Properties)} or
@@ -396,6 +396,20 @@ public class SocketIO {
 							+ " Try to use new SocketIO().addHeader(key, value).connect(host, callback) "
 							+ "instead of SocketIO(host, callback).addHeader(key, value)");
 		this.headers.setProperty(key, value);
+		return this;
+	}
+
+	/**
+	 * Adds a query param to the {@link #queryParams}
+	 * @return SocketIO.this for daisy chaining.
+	 */
+	public SocketIO addQueryParam(String key, String value) {
+		if (this.connection != null)
+			throw new RuntimeException(
+					"You may only set query params before connecting.\n"
+							+ " Try to use new SocketIO().addQueryParam(key, value).connect(host, callback) "
+							+ "instead of SocketIO(host, callback).addHeader(key, value)");
+		this.queryParams.setProperty(key, value);
 		return this;
 	}
 
