@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Map; // Manish
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.Timer;
@@ -31,10 +32,14 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
-
+import java.net.CookieManager;
+import java.net.CookieHandler;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * The Class IOConnection.
@@ -89,6 +94,9 @@ class IOConnection implements IOCallback {
 
 	/** The session id of this connection. */
 	private String sessionId;
+    
+    // Manish
+    private String cookieString;
 
 	/** The heartbeat timeout. Set by the server */
 	private long heartbeatTimeout;
@@ -345,7 +353,9 @@ class IOConnection implements IOCallback {
 		try {
 			setState(STATE_HANDSHAKE);
 			url = addQueryString(new URL(IOConnection.this.url.toString() + SOCKET_IO_1));
-
+            CookieManager cookieManager = new CookieManager();
+            CookieHandler.setDefault(cookieManager);
+            
 			connection = url.openConnection();
 			if (connection instanceof HttpsURLConnection) {
 				((HttpsURLConnection) connection)
@@ -367,6 +377,24 @@ class IOConnection implements IOCallback {
 
 			InputStream stream = connection.getInputStream();
 			Scanner in = new Scanner(stream);
+            
+            // Manish: Adding cookie support
+            for (Map.Entry<String, List<String>> k : connection.getHeaderFields().entrySet()) {
+                System.out.println(k.toString());
+            }
+            
+            // Manish: If we have received a cookie, from the server,  
+            // lets use the same for connection upgrade message. 
+            // Header field name is Set-Cookie
+            if (connection.getHeaderField("Set-Cookie") != null)
+            {
+            	cookieString = connection.getHeaderField("Set-Cookie");
+            }
+            else
+            {
+            	cookieString = null;
+            }
+            
 			response = in.nextLine();
 			String[] data = response.split(":");
 			sessionId = data[0];
@@ -386,7 +414,14 @@ class IOConnection implements IOCallback {
 			return;
 		setState(STATE_CONNECTING);
 		if (protocols.contains(WebsocketTransport.TRANSPORT_NAME))
-			transport = WebsocketTransport.create(url, this);
+		{
+				// Manish - Adding support for cookie
+		   		Map headers = new HashMap();
+ 		   		if (cookieString != null)
+		   		   		headers.put("Cookie", cookieString);
+		   		//transport = WebsocketTransport.create(url, this);
+		   		transport = WebsocketTransport.create(url, this, headers);
+        }
 		else if (protocols.contains(XhrTransport.TRANSPORT_NAME))
 			transport = XhrTransport.create(url, this);
 		else {
@@ -467,6 +502,7 @@ class IOConnection implements IOCallback {
 		}
 		firstSocket = socket;
 		headers = socket.getHeaders();
+        System.out.println("Manish: Getheaders");
         queryParams = socket.getQueryParams();
 		sockets.put(socket.getNamespace(), socket);
 		new ConnectThread().start();

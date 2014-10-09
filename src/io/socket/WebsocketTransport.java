@@ -17,20 +17,28 @@ import java.security.cert.X509Certificate;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 
+// Manish - Adding support for cookie
+import org.java_websocket.drafts.Draft_17;
+
 class WebsocketTransport extends WebSocketClient implements IOTransport {
     private final static Pattern PATTERN_HTTP = Pattern.compile("^http");
     public static final String TRANSPORT_NAME = "websocket";
     private IOConnection connection;
-    public static IOTransport create(URL url, IOConnection connection) {
+
+	// Manish - Adding support for cookie
+    // public static IOTransport create(URL url, IOConnection connection) {
+    public static IOTransport create(URL url, IOConnection connection, java.util.Map<java.lang.String,java.lang.String> headers) {
         URI uri = URI.create(
                 PATTERN_HTTP.matcher(url.toString()).replaceFirst("ws")
                 + IOConnection.SOCKET_IO_1 + TRANSPORT_NAME
                 + "/" + connection.getSessionId());
 
-        return new WebsocketTransport(uri, connection);
+        // Manish - Adding support for cookie
+    	// return new WebsocketTransport(uri, connection);
+    	return new WebsocketTransport(uri, connection, headers);
     }
 
-	public WebsocketTransport(URI uri, IOConnection connection) {
+	public WebsocketTransport(URI uri, IOConnection connection, java.util.Map<java.lang.String,java.lang.String> headers) {
 //        super(uri);
 //        this.connection = connection;
 //        try {
@@ -55,7 +63,9 @@ class WebsocketTransport extends WebSocketClient implements IOTransport {
 //            e.printStackTrace();
 //        }
 
-        super(uri);
+        // Manish - Adding support for cookie
+    	// super(uri, new Draft());
+    	super(uri, new Draft_17(), headers, 60);
         this.connection = connection;
         SSLContext context = IOConnection.getSslContext();
         if(context == null) {
@@ -77,6 +87,8 @@ class WebsocketTransport extends WebSocketClient implements IOTransport {
                 e.printStackTrace();
             }
         }
+        //connection.
+        
     }
 
     /* (non-Javadoc)
