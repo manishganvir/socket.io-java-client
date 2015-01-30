@@ -21,6 +21,7 @@ import org.java_websocket.handshake.ServerHandshake;
 import org.java_websocket.drafts.Draft_17;
 
 class WebsocketTransport extends WebSocketClient implements IOTransport {
+
     private final static Pattern PATTERN_HTTP = Pattern.compile("^http");
     public static final String TRANSPORT_NAME = "websocket";
     private IOConnection connection;
@@ -32,7 +33,11 @@ class WebsocketTransport extends WebSocketClient implements IOTransport {
                 PATTERN_HTTP.matcher(url.toString()).replaceFirst("ws")
                 + IOConnection.SOCKET_IO_1 + TRANSPORT_NAME
                 + "/" + connection.getSessionId());
-
+                if (SocketIO.ENABLE_DEBUG)
+          		{
+          			System.out.println("IOTransport create");
+          			System.out.println(uri.toString());
+          		}
         // Manish - Adding support for cookie
     	// return new WebsocketTransport(uri, connection);
     	return new WebsocketTransport(uri, connection, headers);
@@ -65,7 +70,7 @@ class WebsocketTransport extends WebSocketClient implements IOTransport {
 
         // Manish - Adding support for cookie
     	// super(uri, new Draft());
-    	super(uri, new Draft_17(), headers, 60);
+    	super(uri, new Draft_17(), headers, 0);
         this.connection = connection;
         SSLContext context = IOConnection.getSslContext();
         if(context == null) {
@@ -129,18 +134,30 @@ class WebsocketTransport extends WebSocketClient implements IOTransport {
 
     @Override
     public void onClose(int code, String reason, boolean remote) {
+     if (SocketIO.ENABLE_DEBUG)
+        System.out.println("WebsocketTransport onClose code " + code + " reason " + reason + " remote " + remote);
+
         if(connection != null)
             connection.transportDisconnected();
     }
 
     @Override
     public void onMessage(String text) {
+     if (SocketIO.ENABLE_DEBUG)
+    	System.out.println("WebsocketTransport onMessage " + text);
+    //System.out.println(text;
+
         if(connection != null)
             connection.transportMessage(text);
     }
 
     @Override
     public void onOpen(ServerHandshake handshakedata) {
+     	if (SocketIO.ENABLE_DEBUG)
+    	{
+    		System.out.println("WebsocketTransport onOpen");
+    		System.out.println(handshakedata.getHttpStatusMessage());
+    	}
         if(connection != null)
             connection.transportConnected();
     }
@@ -153,6 +170,12 @@ class WebsocketTransport extends WebSocketClient implements IOTransport {
     @Override
     public void onError(Exception ex) {
         // TODO Auto-generated method stub
+         		if (SocketIO.ENABLE_DEBUG)
+          		{
+                	System.out.println("WebsocketTransport onerror");
+                	ex.printStackTrace();
+                }
+
 
     }
 }

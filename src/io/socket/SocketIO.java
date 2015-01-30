@@ -25,6 +25,9 @@ public class SocketIO {
 
 	/** callback of this Socket. */
 	private IOCallback callback;
+	
+	public static boolean ENABLE_DEBUG=false;
+ 
 
 	/** connection of this Socket. */
 	private IOConnection connection;
