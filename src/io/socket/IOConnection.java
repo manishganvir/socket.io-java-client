@@ -377,10 +377,13 @@ class IOConnection implements IOCallback {
 			InputStream stream = connection.getInputStream();
 			Scanner in = new Scanner(stream);
             
-            // Manish: Adding cookie support
-            for (Map.Entry<String, List<String>> k : connection.getHeaderFields().entrySet()) {
-               System.out.println(k.toString());
-           }
+            if (SocketIO.ENABLE_DEBUG)
+            {
+            	// Manish: Adding cookie support
+            	for (Map.Entry<String, List<String>> k : connection.getHeaderFields().entrySet()) {
+               		System.out.println(k.toString());
+           		}
+           	}
             // Manish: If we have received a cookie, from the server,  
             // lets use the same for connection upgrade message. 
             // Header field name is Set-Cookie
